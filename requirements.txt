@@ -6,7 +6,8 @@ scikit-learn
 scipy
 pytest
 fastapi
-pydantic
+pydantic>=2.7.0
+iterative-telemetry>=0.0.7
 uvicorn
 gunicorn
 hyperopt
