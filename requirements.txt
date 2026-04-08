@@ -16,3 +16,5 @@ python-multipart
 prometheus_fastapi_instrumentator
 boto3
 setuptools<70.0.0
+evidently==0.4.1
+
