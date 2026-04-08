@@ -14,9 +14,9 @@ RUN chmod +w /app/tests
 
 RUN chmod +x /app/prediction_model
 
-RUN chmod +w /app/prediction_model/trained_models
+RUN mkdir -p /app/prediction_model/trained_models && chmod +w /app/prediction_model/trained_models
 
-RUN chmod +w /app/prediction_model/datasets
+RUN mkdir -p /app/prediction_model/datasets && chmod +w /app/prediction_model/datasets
 
 
 ENV PYTHONPATH "${PYTHONPATH}:/app/prediction_model"
