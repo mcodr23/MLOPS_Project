@@ -47,7 +47,7 @@ DROP_FEATURES = ['CoapplicantIncome']
 
 LOG_FEATURES = ['ApplicantIncome', 'LoanAmount'] # taking log of numerical columns
 
-S3_BUCKET = "loanprediction"
+S3_BUCKET = "my-first-mlops-data"
 
 FOLDER="datadrift"
 
