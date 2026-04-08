@@ -1,5 +1,5 @@
 # Model building requirements
-numpy
+numpy<2.0
 pandas
 joblib
 scikit-learn
@@ -8,7 +8,7 @@ pytest
 fastapi
 pydantic==1.10.2
 
-iterative-telemetry>=0.0.7
+iterative-telemetry==0.0.5
 uvicorn
 gunicorn
 hyperopt
@@ -18,5 +18,5 @@ python-multipart
 prometheus_fastapi_instrumentator
 boto3
 setuptools<70.0.0
-evidently==0.4.1
+evidently==0.4.33
 
