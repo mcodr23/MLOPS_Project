@@ -9,7 +9,7 @@ from datetime import datetime,timedelta
 s3 = boto3.client('s3')
 
 # S3 bucket name
-bucket_name = 'loanprediction'
+bucket_name = 'my-first-mlops-data'
 
 # Function to list folders in the specified S3 bucket and prefix
 def list_folders(bucket_name, prefix):
@@ -73,7 +73,8 @@ def main():
             baseline_df = load_csv_from_s3(bucket_name, baseline_csv_key)
 
             # Drop 'Loan_ID' and 'Loan_Status' columns from the baseline DataFrame
-            baseline_df = baseline_df.drop(columns=['Loan_ID', 'Loan_Status'])
+            cols_to_drop = [c for c in ['Loan_ID', 'Loan_Status'] if c in baseline_df.columns]
+            baseline_df = baseline_df.drop(columns=cols_to_drop)
 
             # List all CSV files in the current date folder
             latest_csv_files = list_csv_files(bucket_name, most_recent_folder)
@@ -118,7 +119,8 @@ def main():
             baseline_df = load_csv_from_s3(bucket_name, baseline_csv_key)
 
             # Drop 'Loan_ID' and 'Loan_Status' columns from the baseline DataFrame
-            baseline_df = baseline_df.drop(columns=['Loan_ID', 'Loan_Status'])
+            cols_to_drop = [c for c in ['Loan_ID', 'Loan_Status'] if c in baseline_df.columns]
+            baseline_df = baseline_df.drop(columns=cols_to_drop)
 
             # List all CSV files in the current date folder
             latest_csv_files = list_csv_files(bucket_name, most_recent_folder)
