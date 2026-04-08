@@ -6,7 +6,7 @@ scikit-learn
 scipy
 pytest
 fastapi
-pydantic==1.10.2
+pydantic>=1.10.13
 
 iterative-telemetry==0.0.5
 uvicorn
