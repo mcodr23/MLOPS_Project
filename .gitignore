@@ -1,0 +1,6 @@
+venv/
+mlruns/
+mlruns.db
+prediction_model/datasets/*.csv
+__pycache__/
+*.pyc
