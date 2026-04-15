@@ -15,7 +15,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 
 
 def upload_to_s3(file_content, filename):
-    s3 = boto3.client('s3')
+    s3 = boto3.client('s3', region_name='ap-southeast-2')
     
     current_date = datetime.now().strftime("%Y-%m-%d")
     if filename.endswith('.csv'):

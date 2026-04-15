@@ -75,7 +75,7 @@ def objective(params):
     
    
     # Fit the pipeline
-    mlflow.xgboost.autolog()
+    # mlflow.xgboost.autolog() # Disabled to prevent conflict with manual log_model below
     mlflow.set_experiment("loan_prediction_model")
     with mlflow.start_run(nested=True):
         # Fit the pipeline

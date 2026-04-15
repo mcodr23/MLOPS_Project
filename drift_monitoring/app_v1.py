@@ -5,8 +5,8 @@ from evidently.report import Report
 from evidently.metric_preset import DataDriftPreset,DataQualityPreset
 from datetime import datetime,timedelta
 
-# Initialize the S3 client
-s3 = boto3.client('s3')
+# Initialize the S3 client with the correct region for Sydney
+s3 = boto3.client('s3', region_name='ap-southeast-2')
 
 # S3 bucket name
 bucket_name = 'my-first-mlops-data'
@@ -61,47 +61,48 @@ def main():
         # current_date = datetime.now().strftime('%Y-%m-%d')
         # current_date_folder = f'{prefix}{current_date}/'
 
-        most_recent_folder = find_most_recent_folder(bucket_name, prefix)
+        try:
+            most_recent_folder = find_most_recent_folder(bucket_name, prefix)
+            baseline_df = None
 
-        # List all folders in the datadrift directory
-        # folders = list_folders(bucket_name, prefix)
-        
-        # if current_date_folder in folders:
-        if most_recent_folder:
-            # Load the baseline CSV
-            baseline_csv_key = 'datadrift/baseline.csv'
-            baseline_df = load_csv_from_s3(bucket_name, baseline_csv_key)
+            if most_recent_folder:
+                # Load the baseline CSV
+                baseline_csv_key = 'datadrift/baseline.csv'
+                baseline_df = load_csv_from_s3(bucket_name, baseline_csv_key)
 
-            # Drop 'Loan_ID' and 'Loan_Status' columns from the baseline DataFrame
-            cols_to_drop = [c for c in ['Loan_ID', 'Loan_Status'] if c in baseline_df.columns]
-            baseline_df = baseline_df.drop(columns=cols_to_drop)
+            if most_recent_folder and baseline_df is not None:
+                # Drop 'Loan_ID' and 'Loan_Status' columns from the baseline DataFrame
+                cols_to_drop = [c for c in ['Loan_ID', 'Loan_Status'] if c in baseline_df.columns]
+                baseline_df = baseline_df.drop(columns=cols_to_drop)
 
-            # List all CSV files in the current date folder
-            latest_csv_files = list_csv_files(bucket_name, most_recent_folder)
-            
-            # Streamlit dropdown for selecting the target dataset
-            selected_file = st.selectbox('Select the target dataset', latest_csv_files)
-
-            if selected_file:
-                # Load and process the selected target dataset
-                latest_df = load_csv_from_s3(bucket_name, selected_file)
-
-                # Calculate data drift
-                drift_report = calculate_data_drift_evidently(baseline_df, latest_df)
+                # List all CSV files in the current date folder
+                latest_csv_files = list_csv_files(bucket_name, most_recent_folder)
                 
-                #Replace colons with underscores in the filename
-                safe_filename = selected_file.split("/")[-1].replace(":", "_")
-                
-                report_filename = f'drift_report_{safe_filename}.html'
-                drift_report.save_html(report_filename)
-                
-                
-                # Display the report
-                with open(report_filename, 'r', encoding='utf-8') as f:
-                    html_content = f.read()
-                    st.components.v1.html(html_content, height=1000,width=1000,scrolling=True)
-        else:
-            st.write(f'No folder found ')
+                # Streamlit dropdown for selecting the target dataset
+                selected_file = st.selectbox('Select the target dataset', latest_csv_files)
+
+                if selected_file:
+                    # Load and process the selected target dataset
+                    latest_df = load_csv_from_s3(bucket_name, selected_file)
+
+                    # Calculate data drift
+                    drift_report = calculate_data_drift_evidently(baseline_df, latest_df)
+                    
+                    #Replace colons with underscores in the filename
+                    safe_filename = selected_file.split("/")[-1].replace(":", "_")
+                    
+                    report_filename = f'drift_report_{safe_filename}.html'
+                    drift_report.save_html(report_filename)
+                    
+                    # Display the report
+                    with open(report_filename, 'r', encoding='utf-8') as f:
+                        html_content = f.read()
+                        st.components.v1.html(html_content, height=1000,width=1000,scrolling=True)
+            else:
+                st.warning('No folder or baseline data found on S3. Please ensure baseline.csv is uploaded and a batch prediction has been run.')
+        except Exception as e:
+            st.error(f"Error connecting to S3 or loading data: {e}")
+            st.error("Please verify that your AWS credentials (AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY) are set in your environment.")
 
     elif page == "Data Quality":
         st.header('Data Quality Analysis')
@@ -111,46 +112,50 @@ def main():
 
         # List all folders in the datadrift directory
         #folders = list_folders(bucket_name, prefix)
-        most_recent_folder = find_most_recent_folder(bucket_name, prefix)
-        
-        if  most_recent_folder:
-            # Load the baseline CSV
-            baseline_csv_key = 'datadrift/baseline.csv'
-            baseline_df = load_csv_from_s3(bucket_name, baseline_csv_key)
-
-            # Drop 'Loan_ID' and 'Loan_Status' columns from the baseline DataFrame
-            cols_to_drop = [c for c in ['Loan_ID', 'Loan_Status'] if c in baseline_df.columns]
-            baseline_df = baseline_df.drop(columns=cols_to_drop)
-
-            # List all CSV files in the current date folder
-            latest_csv_files = list_csv_files(bucket_name, most_recent_folder)
+        try:
+            most_recent_folder = find_most_recent_folder(bucket_name, prefix)
+            baseline_df = None
             
-            # Streamlit dropdown for selecting the target dataset
-            selected_file = st.selectbox('Select the target dataset', latest_csv_files)
+            if  most_recent_folder:
+                # Load the baseline CSV
+                baseline_csv_key = 'datadrift/baseline.csv'
+                baseline_df = load_csv_from_s3(bucket_name, baseline_csv_key)
 
-            if selected_file:
-                # Load and process the selected target dataset
-                latest_df = load_csv_from_s3(bucket_name, selected_file)
+            if most_recent_folder and baseline_df is not None:
+                # Drop 'Loan_ID' and 'Loan_Status' columns from the baseline DataFrame
+                cols_to_drop = [c for c in ['Loan_ID', 'Loan_Status'] if c in baseline_df.columns]
+                baseline_df = baseline_df.drop(columns=cols_to_drop)
 
-                latest_df=latest_df.drop(['Prediction'],axis=1)
+                # List all CSV files in the current date folder
+                latest_csv_files = list_csv_files(bucket_name, most_recent_folder)
+                
+                # Streamlit dropdown for selecting the target dataset
+                selected_file = st.selectbox('Select the target dataset', latest_csv_files)
 
-                # Calculate data drift
-                drift_report = calculate_data_quality_evidently(baseline_df, latest_df)
-                
-                #Replace colons with underscores in the filename
-                safe_filename = selected_file.split("/")[-1].replace(":", "_")
-                
-                report_filename = f'drift_report_{safe_filename}.html'
-                drift_report.save_html(report_filename)
-                
-                
-                # Display the report
-                with open(report_filename, 'r', encoding='utf-8') as f:
-                    html_content = f.read()
-                    st.components.v1.html(html_content, height=1000,width=1300,scrolling=True)
-      
-        else:
-            st.write(f'No folder found ')
+                if selected_file:
+                    # Load and process the selected target dataset
+                    latest_df = load_csv_from_s3(bucket_name, selected_file)
+
+                    latest_df=latest_df.drop(['Prediction'],axis=1)
+
+                    # Calculate data drift
+                    drift_report = calculate_data_quality_evidently(baseline_df, latest_df)
+                    
+                    #Replace colons with underscores in the filename
+                    safe_filename = selected_file.split("/")[-1].replace(":", "_")
+                    
+                    report_filename = f'drift_report_{safe_filename}.html'
+                    drift_report.save_html(report_filename)
+                    
+                    # Display the report
+                    with open(report_filename, 'r', encoding='utf-8') as f:
+                        html_content = f.read()
+                        st.components.v1.html(html_content, height=1000,width=1300,scrolling=True)
+            else:
+                st.warning('No folder or baseline data found on S3. Please ensure baseline.csv is uploaded and a batch prediction has been run.')
+        except Exception as e:
+            st.error(f"Error connecting to S3 or loading data: {e}")
+            st.error("Please verify that your AWS credentials (AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY) are set in your environment.")
 
 
 if __name__ == "__main__":

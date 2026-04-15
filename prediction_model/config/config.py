@@ -56,5 +56,5 @@ TRACKING_URI="sqlite:///mlruns.db"
 
 EXPERIMENT_NAME="loan_prediction_model"
 
-MODEL_NAME="/Loanprediction-model"
+MODEL_NAME="Loanprediction-model"
 
