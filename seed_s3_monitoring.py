@@ -10,14 +10,19 @@ bucket_name = 'my-first-mlops-data'
 
 def seed_data():
     print(f"--- Seeding S3 Monitoring Resources ({region}) ---")
+    # Initialize S3 client (will automatically use env variables if present)
     s3 = boto3.client('s3', region_name=region)
     
     # 1. Upload Baseline (train.csv)
     local_train = os.path.join('prediction_model', 'datasets', 'train.csv')
     if os.path.exists(local_train):
-        print("Uploading baseline.csv...")
-        s3.upload_file(local_train, bucket_name, 'datadrift/baseline.csv')
-        print("✅ Baseline uploaded.")
+        print(f"Uploading {local_train} to S3 bucket '{bucket_name}'...")
+        try:
+            s3.upload_file(local_train, bucket_name, 'datadrift/baseline.csv')
+            print("✅ Baseline (baseline.csv) uploaded to S3.")
+        except Exception as e:
+            print(f"❌ Failed to upload baseline: {e}")
+            return
     else:
         print("❌ local train.csv not found.")
 

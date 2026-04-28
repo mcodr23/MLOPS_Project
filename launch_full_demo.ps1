@@ -7,6 +7,7 @@ Write-Host "`n[Action Required] Please enter your AWS credentials for the Sydney
 if (-not $env:AWS_ACCESS_KEY_ID) {
     $env:AWS_ACCESS_KEY_ID = Read-Host "Enter AWS Access Key ID"
     $env:AWS_SECRET_ACCESS_KEY = Read-Host "Enter AWS Secret Access Key"
+    $env:AWS_SESSION_TOKEN = Read-Host "Enter AWS Session Token (Leave blank if not using Learner Lab)"
 }
 $env:AWS_DEFAULT_REGION = "ap-southeast-2"
 $env:PYTHONPATH = (Get-Item .).FullName
@@ -32,7 +33,17 @@ Write-Host "✅ Prometheus (9090) and Grafana (3000) are starting..." -Foregroun
 
 # 4. Launch Pillar 2: Model Serving (FastAPI)
 Write-Host "`n--- Step 3: Launching Model Serving API ---" -ForegroundColor Green
-Start-Process -FilePath ".\venv\Scripts\python.exe" -ArgumentList "main.py" -NoNewWindow
+# Use Start-Process with environment variables explicitly passed (Workaround for some Windows versions)
+$psi = New-Object System.Diagnostics.ProcessStartInfo
+$psi.FileName = ".\venv\Scripts\python.exe"
+$psi.Arguments = "main.py"
+$psi.EnvironmentVariables["AWS_ACCESS_KEY_ID"] = $env:AWS_ACCESS_KEY_ID
+$psi.EnvironmentVariables["AWS_SECRET_ACCESS_KEY"] = $env:AWS_SECRET_ACCESS_KEY
+$psi.EnvironmentVariables["AWS_SESSION_TOKEN"] = $env:AWS_SESSION_TOKEN
+$psi.EnvironmentVariables["AWS_DEFAULT_REGION"] = "ap-southeast-2"
+$psi.EnvironmentVariables["PYTHONPATH"] = (Get-Item .).FullName
+$psi.UseShellExecute = $false
+[System.Diagnostics.Process]::Start($psi)
 Write-Host "Waiting for API to initialize..." -ForegroundColor Gray
 Start-Sleep -Seconds 12
 Write-Host "✅ FastAPI Serving (8005) is active." -ForegroundColor Gray
@@ -40,11 +51,20 @@ Write-Host "✅ FastAPI Serving (8005) is active." -ForegroundColor Gray
 # 5. Launch Pillar 3: Data Drift Initial Seeding
 Write-Host "`n--- Step 4: Seeding S3 Monitoring Data ---" -ForegroundColor Green
 .\venv\Scripts\python.exe seed_s3_monitoring.py
+.\venv\Scripts\python.exe force_upload_drift_data.py
 Write-Host "✅ S3 Baseline and Daily Prediction data seeded." -ForegroundColor Gray
 
 # 6. Launch Pillar 3 UI: Drift Dashboard (Streamlit)
 Write-Host "`n--- Step 5: Launching Drift Monitoring Dashboard ---" -ForegroundColor Green
-Start-Process -FilePath ".\venv\Scripts\streamlit.exe" -ArgumentList "run", "drift_monitoring/app_v1.py" -NoNewWindow
+$psi_st = New-Object System.Diagnostics.ProcessStartInfo
+$psi_st.FileName = ".\venv\Scripts\streamlit.exe"
+$psi_st.Arguments = "run drift_monitoring/app_v1.py"
+$psi_st.EnvironmentVariables["AWS_ACCESS_KEY_ID"] = $env:AWS_ACCESS_KEY_ID
+$psi_st.EnvironmentVariables["AWS_SECRET_ACCESS_KEY"] = $env:AWS_SECRET_ACCESS_KEY
+$psi_st.EnvironmentVariables["AWS_SESSION_TOKEN"] = $env:AWS_SESSION_TOKEN
+$psi_st.EnvironmentVariables["AWS_DEFAULT_REGION"] = "ap-southeast-2"
+$psi_st.UseShellExecute = $false
+[System.Diagnostics.Process]::Start($psi_st)
 Write-Host "✅ Data Drift Dashboard (8501) is starting..." -ForegroundColor Gray
 
 Write-Host "`n--- PROJECT READY FOR DEMONSTRATION ---" -ForegroundColor Cyan

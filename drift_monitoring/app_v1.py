@@ -101,8 +101,12 @@ def main():
             else:
                 st.warning('No folder or baseline data found on S3. Please ensure baseline.csv is uploaded and a batch prediction has been run.')
         except Exception as e:
-            st.error(f"Error connecting to S3 or loading data: {e}")
-            st.error("Please verify that your AWS credentials (AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY) are set in your environment.")
+            st.error(f"🚨 S3 Error: {e}")
+            st.info("💡 Tip: Ensure your AWS keys and SESSION TOKEN are correct in the launcher script.")
+            if "AccessDenied" in str(e):
+                st.warning("🔒 Access Denied: Your AWS user may not have permission to read this bucket.")
+            elif "NoCredentialsError" in str(e):
+                st.warning("🔑 No Credentials Found: Please check your environment variables.")
 
     elif page == "Data Quality":
         st.header('Data Quality Analysis')
